@@ -1,0 +1,10 @@
+{
+  "university": "rmit",
+  "year": "2026",
+  "discovered": 50,
+  "status": "partial",
+  "failures": [],
+  "imported": 50,
+  "updated_at": "2026-10-28T11:14:53.386918+00:00",
+  "note": "Only the first 50 public course listings have been imported. Full catalogue pagination is not connected."
+}

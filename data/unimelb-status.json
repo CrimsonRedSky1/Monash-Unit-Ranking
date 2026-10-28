@@ -1,0 +1,10 @@
+{
+  "university": "unimelb",
+  "year": "2026",
+  "status": "partial",
+  "discovered": 6221,
+  "imported": 254,
+  "note": "Only a subset of Architecture, Building and Planning subjects has been imported from the public browser catalogue.",
+  "updated_at": "2026-10-28T11:15:33.043068+00:00",
+  "failures": []
+}

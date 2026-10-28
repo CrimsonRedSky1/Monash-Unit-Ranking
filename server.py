@@ -2,6 +2,7 @@
 import json, os, sqlite3, uuid
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from universities import UNIVERSITIES, DEAKIN_FACULTIES
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -15,7 +16,26 @@ def connect():
         # Keep older reviews intact; their combined semester string still displays.
         db.commit()
     return db
-def units(): return json.loads((BASE/'data/units.json').read_text())
+def units():
+    records={u['id']:u for u in json.loads((BASE/'data/units.json').read_text())}
+    for university in UNIVERSITIES:
+        path=BASE/f"data/{university['id']}.json"
+        if path.exists(): records.update({u['id']:u for u in json.loads(path.read_text())})
+    for unit in records.values():
+        if unit['university']=='deakin':
+            unit['faculty']=DEAKIN_FACULTIES.get(unit['code'][0],unit['faculty'])
+            unit['faculty_source']='https://www.deakin.edu.au/students/enrolment-and-fees/enrol/enrolment-codes-and-terminology'
+    return list(records.values())
+def catalogue_status():
+    statuses={}
+    for university in UNIVERSITIES:
+        path=BASE/f"data/{university['id']}-status.json"
+        if path.exists():
+            report=json.loads(path.read_text())
+            statuses[university['id']]={k:v for k,v in report.items() if k!='failures'}
+            statuses[university['id']]['failed_count']=len(report.get('failures',[]))
+        else: statuses[university['id']]={'status':'partial','note':'Catalogue import is not yet complete.'}
+    return statuses
 def validate(data):
     if not isinstance(data,dict): raise ValueError('Invalid review')
     if data.get('unit') not in {u['id'] for u in units()}: raise ValueError('Choose an existing unit')
@@ -32,7 +52,7 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path=urlparse(self.path).path
         if path=='/api/catalog':
-            self.send_json({'universities':[{'id':'monash','name':'Monash University'}],'units':units()}); return
+            self.send_json({'universities':UNIVERSITIES,'units':units(),'coverage':catalogue_status()}); return
         if path=='/api/reviews':
             with connect() as db: rows=[dict(r) for r in db.execute('SELECT * FROM reviews ORDER BY created DESC, rowid DESC')]
             self.send_json(rows); return
