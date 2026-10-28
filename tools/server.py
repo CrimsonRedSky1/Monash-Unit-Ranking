@@ -6,7 +6,7 @@ from universities import UNIVERSITIES, DEAKIN_FACULTIES
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
-BASE=Path(__file__).parent
+BASE=Path(__file__).resolve().parent.parent
 DB=Path(os.environ.get('UNIT_DB',BASE/'data/reviews.sqlite3'))
 def connect():
     db=sqlite3.connect(DB); db.row_factory=sqlite3.Row
@@ -46,16 +46,21 @@ def validate(data):
         if not isinstance(data.get(key),str) or not low<=len(data[key].strip())<=high: raise ValueError(f'{key.capitalize()} must be {low}–{high} characters')
     return data
 class Handler(SimpleHTTPRequestHandler):
-    def __init__(self,*a,**kw): super().__init__(*a,directory=str(BASE/'public'),**kw)
+    def __init__(self,*a,**kw): super().__init__(*a,directory=str(BASE),**kw)
     def send_json(self,data,status=200):
         body=json.dumps(data).encode(); self.send_response(status); self.send_header('Content-Type','application/json'); self.send_header('Cache-Control','no-store'); self.end_headers(); self.wfile.write(body)
     def do_GET(self):
         path=urlparse(self.path).path
+        if path=='/assets/runtime-config.js':
+            self.send_response(200);self.send_header('Content-Type','application/javascript');self.send_header('Cache-Control','no-store');self.end_headers()
+            self.wfile.write(b"window.UNIT_CLUB_API_BASE = './api/';");return
         if path=='/api/catalog':
             self.send_json({'universities':UNIVERSITIES,'units':units(),'coverage':catalogue_status()}); return
         if path=='/api/reviews':
             with connect() as db: rows=[dict(r) for r in db.execute('SELECT * FROM reviews ORDER BY created DESC, rowid DESC')]
             self.send_json(rows); return
+        if path not in ('/','/index.html','/assets/app.js','/assets/style.css','/assets/icon.svg','/data/catalog.json'):
+            self.send_error(404);return
         super().do_GET()
     def do_POST(self):
         if self.path!='/api/reviews': self.send_json({'error':'Not found'},404); return

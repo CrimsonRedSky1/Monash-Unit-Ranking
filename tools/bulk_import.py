@@ -6,8 +6,9 @@ from importer import parse_page, plain
 from universities import DEAKIN_FACULTIES
 from urllib.parse import urljoin
 import html
-ROOT=Path(__file__).parent; CACHE=ROOT/'data/.cache'; CACHE.mkdir(exist_ok=True)
+ROOT=Path(__file__).resolve().parent.parent; CACHE=ROOT/'data/.cache'
 def fetch(url):
+    CACHE.mkdir(exist_ok=True)
     key=CACHE/(hashlib.sha256(url.encode()).hexdigest()+'.html')
     if key.exists(): return key.read_text()
     p=subprocess.run(['curl','--fail','--silent','--show-error','--location','--max-time','45','--retry','2',url],capture_output=True,text=True)

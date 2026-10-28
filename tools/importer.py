@@ -2,7 +2,7 @@
 import argparse, datetime, html, json, re, subprocess, time
 from pathlib import Path
 from xml.etree import ElementTree as ET
-BASE = Path(__file__).parent
+BASE = Path(__file__).resolve().parent.parent
 SEEDS = 'FIT1045 FIT1047 FIT1051 FIT2094 FIT2099 FIT3178 ATS1261 ECC1000 ETC1000 MGC1010 ENG1011 MTH1020 BIO1011 CHM1011 PSY1011 LAW1111 PHA2022'.split()
 def fetch(url):
     if not url.startswith('https://handbook.monash.edu/'):

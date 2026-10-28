@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 import unittest
 from bulk_import import parse_deakin, parse_rmit
 from server import units
