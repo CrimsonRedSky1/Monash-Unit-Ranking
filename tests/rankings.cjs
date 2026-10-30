@@ -1,0 +1,6 @@
+const test=require('node:test');const assert=require('node:assert/strict');const {rank}=require('../assets/rankings.js');
+const units=[{id:'a',university:'one'},{id:'b',university:'two'},{id:'c',university:'one'}];
+test('Review volume tempers a single perfect score',()=>{const reviews=[{unit:'a',rating:5},...Array.from({length:40},(_,i)=>({unit:'b',rating:i<32?5:4})),...Array.from({length:40},()=>({unit:'c',rating:2}))];assert.equal(rank(units,reviews)[0].id,'b');const filtered=rank(units,reviews,'one');assert.equal(filtered.length,2);assert.equal(filtered[0].score,rank(units,reviews).find(u=>u.id==='a').score)});
+test('Exclude unrated, demo and invalid reviews',()=>{assert.deepEqual(rank(units,[null,{unit:'a',rating:5,demo:true},{unit:'x',rating:5},{unit:'b',rating:6},{unit:'c',rating:'5'}]),[])});
+test('Five-star count breaks equal-score ties',()=>{const rows=rank(units,[{unit:'a',rating:4},{unit:'a',rating:4},{unit:'b',rating:3},{unit:'b',rating:5}]);assert.equal(rows[0].id,'b');assert.equal(rows[0].fives,1)});
+test('At most ten entries, deterministic order',()=>{const many=Array.from({length:30},(_,i)=>({id:String(i).padStart(2,'0'),university:'one'}));const result=rank(many,many.map(u=>({unit:u.id,rating:4})));assert.equal(result.length,10);assert.equal(result[0].id,'00')});

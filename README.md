@@ -90,3 +90,9 @@ python3 -m unittest discover -s tests -v
 ## Shared reviews in production
 
 The repository is prepared for Pages but has not been pushed or deployed by this change. For reviews shared across visitors, deploy the optional API behind a production server with persistent storage and HTTPS, configure its URL in `assets/runtime-config.js`, and implement appropriate CORS/authentication. Student verification, moderation/reporting, abuse prevention, and backups remain production work.
+
+## Top 10 page
+
+`top10.html` shows overall rankings and a searchable university-specific ranking. Scores use `(total stars + 5 × global mean) / (review count + 5)`, with five-star count, review count and unit ID as tie-breakers. Unrated units and demo ratings are excluded. The same global prior is used for university rankings. Static hosting uses browser-local reviews; the optional server uses shared reviews. Catalogue coverage remains limited to imported units.
+
+Run ranking checks with `node --test tests/rankings.cjs`.

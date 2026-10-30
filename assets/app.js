@@ -73,7 +73,7 @@ document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='k'){
   setupUniversityFinder();
   if(apiBase){reviews=await readJSON(new URL('reviews',apiBase));$('#review-storage-label').textContent='Community reviews';$('#review-storage-note').textContent='Reviews are shared through the connected server.';$('#form-storage-note').textContent='Your review will be saved on the connected server.'}
   else{try{reviews=readBrowserReviews()}catch{reviews=[];toast('Browser review storage is unavailable. Saving may be disabled by your browser.')}}
-  $('.submit').textContent=submitLabel;render();
+  $('.submit').textContent=submitLabel;const requested=catalogue.find(u=>u.id===new URLSearchParams(location.search).get('unit'));if(requested)selectedUniversity=requested.university;render();if(requested)detail(requested.id);
  }catch(e){$('#units').innerHTML='<div class="empty"><h3>Could not load the catalogue.</h3><p>Refresh the page or try again later. For local previews, serve the project over HTTP.</p></div>';$('#write').disabled=true;$('#contribute').disabled=true}
 })();
 
