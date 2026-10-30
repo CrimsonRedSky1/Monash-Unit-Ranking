@@ -96,3 +96,7 @@ function renderUniversityFinder(){
  $('#university-results').innerHTML=result.items.map(u=>`<button class="university-result ${u.id===selectedUniversity?'selected':''}" data-university="${esc(u.id)}" aria-pressed="${u.id===selectedUniversity}"><span><strong>${esc(u.name)}</strong><small>${esc((u.locations||[]).filter(l=>!country||l.country===country).map(l=>l.city+', '+l.country).join(' · ')||u.location||'Location not listed')}</small></span><span>${u.id===selectedUniversity?'Selected ✓':'View units ↗'}</span></button>`).join('');
  $('#university-pagination').hidden=result.pages<=1;$('#university-prev').disabled=result.page===0;$('#university-next').disabled=result.page>=result.pages-1;$('#university-page').textContent=`Page ${result.page+1} of ${result.pages}`;
 }
+
+// Reflect bookmark changes made on the separate Saved Units page.
+window.addEventListener('storage',e=>{if(e.key==='unitclub-saved'||e.key===null){try{const items=JSON.parse(localStorage.getItem('unitclub-saved')||'[]');if(Array.isArray(items)){saved=new Set(items);render()}}catch{}}});
+window.addEventListener('pageshow',e=>{if(e.persisted){try{const items=JSON.parse(localStorage.getItem('unitclub-saved')||'[]');if(Array.isArray(items)){saved=new Set(items);render()}}catch{}}});
