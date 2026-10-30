@@ -59,7 +59,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path=='/api/reviews':
             with connect() as db: rows=[dict(r) for r in db.execute('SELECT * FROM reviews ORDER BY created DESC, rowid DESC')]
             self.send_json(rows); return
-        if path not in ('/','/index.html','/assets/app.js','/assets/style.css','/assets/icon.svg','/data/catalog.json'):
+        if path not in ('/','/index.html','/assets/app.js','/assets/university-search.js','/assets/style.css','/assets/icon.svg','/data/catalog.json'):
             self.send_error(404);return
         super().do_GET()
     def do_POST(self):
