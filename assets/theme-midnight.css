@@ -23,3 +23,4 @@ footer.site-footer{background:var(--sage);color:#e4ebe6;border-top-color:#60796d
 footer.site-footer{background:var(--plum);border-top-color:#78617d}.site-footer .footer-disclaimer{border-color:#78617d}
 /* A deeper plum anchors the footer below the lighter header. */
 footer.site-footer{background:#332839;border-top-color:#59465f}.site-footer .footer-disclaimer{border-color:#59465f}
+header .nav.active,header .nav.active span{color:#141d2b}
