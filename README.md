@@ -96,3 +96,6 @@ The repository is prepared for Pages but has not been pushed or deployed by this
 `top10.html` shows overall rankings and a searchable university-specific ranking. Scores use `(total stars + 5 × global mean) / (review count + 5)`, with five-star count, review count and unit ID as tie-breakers. Unrated units and demo ratings are excluded. The same global prior is used for university rankings. Static hosting uses browser-local reviews; the optional server uses shared reviews. Catalogue coverage remains limited to imported units.
 
 Run ranking checks with `node --test tests/rankings.cjs`.
+
+### Leaderboard demo
+Open `top10.html?demo=1` or enable **Test with fictional reviews**. The deterministic fixture creates 396 labelled fictional reviews across 48 units (12 per current university), including small samples, large samples and ties. Demo mode uses only fixtures, never writes them to storage or the server, and links to matching demo reviews in unit details. Disable the toggle to restore real rankings.

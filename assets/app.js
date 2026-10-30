@@ -13,7 +13,7 @@ let saved;try{saved=new Set(JSON.parse(localStorage.getItem('unitclub-saved')||'
 const colours=[['#edf0e4','#7b8d59'],['#f6e9df','#ac7654'],['#e7edf6','#6e88b0'],['#eee8f4','#9a7ab7'],['#f3edda','#a58b4d']];
 const bookmark='<svg viewBox="0 0 18 22" aria-hidden="true"><path d="M3 2h12v18l-6-4-6 4Z"/></svg>';
 const demoBodies=['The practical work made the ideas click. I enjoyed having something tangible to work on each week. Keep up with the weekly material and give yourself time for the assignments.','An interesting unit with a good mix of concepts and hands-on learning. I found discussing the tutorial questions with classmates especially helpful.','I enjoyed the subject, although some weeks took more work than I expected. Starting assessments early made the semester a lot more manageable.'];
-function allReviews(){return [...reviews,...(demo?catalogue.filter(u=>u.university==='monash'&&demoCodes.has(u.code)).flatMap((u,i)=>Array.from({length:3+i%6},(_,j)=>({unit:u.id,author:'Demo student '+(j+1),rating: Math.max(2,5-(j%(i%3+2)===0?1:0)-(i%4===0?1:0)),body:demoBodies[j%3],semester:'Semester 1',year:2026,created:'2026-06-20',demo:true}))):[])]}
+function allReviews(){return demo?LunchTableDemo.generate(catalogue):reviews}
 function stats(u){const r=reviewIndex.get(u.id)||[];return{count:r.length,rating:r.length?r.reduce((a,r)=>a+r.rating,0)/r.length:0}}
 function stars(n){return `<span class="stars" aria-label="${Number(n).toFixed(1)} out of 5 stars">${'★'.repeat(Math.round(n))}${'☆'.repeat(5-Math.round(n))}</span>`}
 function shortFaculty(f){return f.replace('Business and Economics','Business & Economics').replace('Medicine, Nursing and Health Sciences','Medicine & Health').replace('Art Design and Architecture','Art, Design & Architecture').replace('Pharmacy and Pharmaceutical Sciences','Pharmacy')}
@@ -73,7 +73,7 @@ document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='k'){
   setupUniversityFinder();
   if(apiBase){reviews=await readJSON(new URL('reviews',apiBase));$('#review-storage-label').textContent='Community reviews';$('#review-storage-note').textContent='Reviews are shared through the connected server.';$('#form-storage-note').textContent='Your review will be saved on the connected server.'}
   else{try{reviews=readBrowserReviews()}catch{reviews=[];toast('Browser review storage is unavailable. Saving may be disabled by your browser.')}}
-  $('.submit').textContent=submitLabel;const requested=catalogue.find(u=>u.id===new URLSearchParams(location.search).get('unit'));if(requested)selectedUniversity=requested.university;render();if(requested)detail(requested.id);
+  demo=new URLSearchParams(location.search).get('demo')==='1';$('#demo').checked=demo;$('.submit').textContent=submitLabel;const requested=catalogue.find(u=>u.id===new URLSearchParams(location.search).get('unit'));if(requested)selectedUniversity=requested.university;render();if(requested)detail(requested.id);
  }catch(e){$('#units').innerHTML='<div class="empty"><h3>Could not load the catalogue.</h3><p>Refresh the page or try again later. For local previews, serve the project over HTTP.</p></div>';$('#write').disabled=true;$('#contribute').disabled=true}
 })();
 
