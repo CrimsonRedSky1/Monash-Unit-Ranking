@@ -14,3 +14,5 @@ html{scroll-behavior:smooth;scroll-padding-top:130px}header{position:sticky;top:
 
 /* LunchTable: a shared table and a conversation bubble. */
 .brand-logo{display:block;flex-shrink:0;object-fit:contain}.brand-table{color:var(--orange)}.brand{letter-spacing:-1.2px;gap:10px}footer .brand-logo{width:36px;height:36px}@media(max-width:680px){header .brand{font-size:23px;gap:8px}header .brand-logo{width:36px;height:36px}}
+
+.brand-wordmark{display:block;width:240px;height:auto;max-width:100%;mix-blend-mode:multiply}footer .brand-wordmark{width:210px}@media(max-width:800px){header .brand-wordmark{width:190px}}@media(max-width:380px){header .brand-wordmark{width:160px}}
