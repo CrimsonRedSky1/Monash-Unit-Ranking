@@ -59,7 +59,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path=='/api/reviews':
             with connect() as db: rows=[dict(r) for r in db.execute('SELECT * FROM reviews ORDER BY created DESC, rowid DESC')]
             self.send_json(rows); return
-        if path not in ('/','/index.html','/assets/app.js','/assets/university-search.js','/assets/style.css','/assets/icon.svg','/data/catalog.json'):
+        if path not in ('/','/index.html','/assets/app.js','/assets/university-search.js','/assets/style.css','/assets/icon.svg','/assets/lunchtable-logo.svg','/data/catalog.json'):
             self.send_error(404);return
         super().do_GET()
     def do_POST(self):
@@ -76,4 +76,4 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json({'ok':True},201)
         except (ValueError,TypeError): self.send_json({'error':'Enter a name (2–60 characters), 1–5 stars, a valid year and semester, and a review (20–2000 characters).'},400)
 if __name__=='__main__':
-    connect().close(); port=int(os.environ.get('PORT','8000')); print(f'Unit Club running at http://localhost:{port}',flush=True); ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever()
+    connect().close(); port=int(os.environ.get('PORT','8000')); print(f'LunchTable running at http://localhost:{port}',flush=True); ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever()

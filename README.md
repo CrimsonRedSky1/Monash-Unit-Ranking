@@ -1,4 +1,4 @@
-# Unit Club website
+# LunchTable website
 
 A responsive university unit review website with a desktop landing page, university directory, searchable faculty catalogue, saved units, and a separate top 10 for each university. Navigation stays at the top on desktop and mobile. There is no installable-app manifest or native app build.
 
