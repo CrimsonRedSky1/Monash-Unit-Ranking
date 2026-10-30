@@ -3,7 +3,8 @@ import argparse, concurrent.futures, datetime, hashlib, json, re, subprocess, ti
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from importer import parse_page, plain
-from universities import DEAKIN_FACULTIES
+from universities import DEAKIN_FACULTIES, REGISTRY
+from university_registry import ImportAdapter, validate_unit
 from urllib.parse import urljoin
 import html
 ROOT=Path(__file__).resolve().parent.parent; CACHE=ROOT/'data/.cache'
@@ -23,15 +24,18 @@ def sitemap(url,year):
     return [u for u in locs if re.search(rf'/{year}/units/[A-Z]+\d+/?$',u)]
 def save_json(path,value):
     tmp=path.with_suffix('.tmp');tmp.write_text(json.dumps(value,ensure_ascii=False,indent=2));tmp.replace(path)
-def run(university,year,urls,parser):
+def run(university,year,urls,parser,coverage_note=""):
+    urls=sorted(set(urls))
+    if not urls: raise ValueError("No unit URLs discovered; existing catalogue retained")
     path=ROOT/f'data/{university}.json'; records={u['source']:u for u in json.loads(path.read_text())} if path.exists() else {}
+    for record in records.values(): validate_unit(record,university,year)
     report={'university':university,'year':year,'discovered':len(urls),'status':'running','failures':[]}
     def save():
         report['imported']=len(records);report['updated_at']=datetime.datetime.now(datetime.timezone.utc).isoformat()
         save_json(path,list(records.values()));save_json(ROOT/f'data/{university}-status.json',report)
     save();print(f'{university}: {len(urls)} discovered, {len(records)} already imported',flush=True)
     def one(url):
-        try:return url,parser(fetch(url),url),None
+        try:return url,validate_unit(parser(fetch(url),url),university,year),None
         except Exception as e:return url,None,str(e)
     pending=[u for u in urls if u not in records]
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
@@ -42,9 +46,14 @@ def run(university,year,urls,parser):
                     report['note']='Import stopped after the source denied or rate-limited access. Remaining URLs have not been retried.'
                     ex.shutdown(wait=False,cancel_futures=True)
                     break
-            elif record:records[url]=record
+            elif record:
+                if any(old['id']==record['id'] and source!=url for source,old in records.items()):
+                    report['failures'].append({'url':url,'error':'Duplicate unit ID from another source URL'})
+                else: records[url]=record
             if n%25==0:save();print(f'{university}: {len(records)}/{len(urls)} imported; {len(report["failures"])} failed',flush=True)
-    report['status']='complete' if not report['failures'] and len(records)==len(urls) else 'partial';save()
+    report['status']='complete' if not report['failures'] and len(records)==len(urls) and not coverage_note else 'partial'
+    if coverage_note: report['note']=coverage_note
+    save()
     print(f'{university}: {report["status"]}; {len(records)} imported, {len(report["failures"])} failed',flush=True)
 def discover_deakin(year):
     urls=set()
@@ -75,11 +84,32 @@ def parse_rmit(page,url):
     codes=sorted(set(re.findall(r'headers="COURSE_CODE"[^>]*>\s*([A-Z]+[0-9]+)',page)))
     desc=re.search(r'aria-label="Course&#x20;Description".*?<div class="t-Region-orderBy"></div>(.*?)(?:<div class="t-Region-buttons|</section>)',page,re.S)
     return dict(id='rmit:'+internal,university='rmit',code=' / '.join(codes) or internal,name=name,faculty=field('P6_HE_COURSE_ACADEMIC_GROUP') or field('P6_FACULTY') or 'College not listed',school=field('P6_HE_DEPARTMENT'),credits=field('P6_HE_UNITS'),year='2026',description=plain(desc.group(1)) if desc else '',source=url,imported_at=datetime.datetime.now(datetime.timezone.utc).isoformat())
-if __name__=='__main__':
-    ap=argparse.ArgumentParser();ap.add_argument('--university',choices=['monash','deakin','rmit'],default='monash');ap.add_argument('--year',default='2026');args=ap.parse_args()
-    if args.university=='monash':run('monash',args.year,sitemap('https://handbook.monash.edu/sitemap.xml',args.year),parse_page)
-    elif args.university=='deakin':run('deakin',args.year,discover_deakin(args.year),parse_deakin)
+def discover_monash(year):
+    return sitemap('https://handbook.monash.edu/sitemap.xml',year)
 
-    elif args.university=='rmit':
-        run('rmit',args.year,discover_rmit(args.year),parse_rmit)
-        path=ROOT/'data/rmit-status.json';report=json.loads(path.read_text());report['status']='partial';report['note']='Only the first 50 public course listings have been imported. Full catalogue pagination is not connected.';save_json(path,report)
+# Each source adapter uses the same discovery -> parse -> validate -> checkpoint pipeline.
+REGISTRY.register_importer('monash',ImportAdapter(discover_monash,parse_page))
+REGISTRY.register_importer('deakin',ImportAdapter(discover_deakin,parse_deakin))
+REGISTRY.register_importer('rmit',ImportAdapter(discover_rmit,parse_rmit,
+    coverage_note='Only the first public course listing page is imported. Full catalogue pagination is not connected.',
+    supported_years=('2026',)))
+
+def main(argv=None):
+    ap=argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('--university',choices=list(REGISTRY.universities),default='monash')
+    ap.add_argument('--year',default='2026')
+    ap.add_argument('--list',action='store_true',help='List registered universities and import availability')
+    args=ap.parse_args(argv)
+    if args.list:
+        for uid,details in REGISTRY.universities.items():
+            status='automatic import available' if uid in REGISTRY.adapters else 'existing catalogue only; adapter not configured'
+            print(f'{uid}: {details["name"]} — {status}')
+        return
+    try:
+        if not re.fullmatch(r'\d{4}',args.year): raise ValueError('Year must have four digits')
+        adapter=REGISTRY.importer(args.university,args.year)
+        run(args.university,args.year,adapter.discover(args.year),adapter.parse,adapter.coverage_note)
+    except ValueError as error:
+        ap.error(str(error))
+
+if __name__=='__main__':main()

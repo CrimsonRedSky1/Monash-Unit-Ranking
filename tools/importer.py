@@ -34,7 +34,8 @@ def main():
     failures=[]
     for i,url in enumerate(urls):
         try:
-            unit=parse_page(fetch(url),url); units[unit['id']]=unit
+            from university_registry import validate_unit
+            unit=validate_unit(parse_page(fetch(url),url),"monash",args.year); units[unit['id']]=unit
             temp=path.with_suffix('.tmp'); temp.write_text(json.dumps(list(units.values()),indent=2)); temp.replace(path)
             print(f'{i+1}/{len(urls)} {unit["code"]}',flush=True)
         except Exception as e: failures.append(url); print(f'FAILED {url}: {e}',flush=True)

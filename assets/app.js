@@ -23,7 +23,7 @@ function render(){
  $('#catalogue').hidden=!hasUniversity;$('.demo-note').hidden=!hasUniversity;$('.contribute').hidden=!hasUniversity;$('#handbook-link').hidden=!hasUniversity;
  $('#write').disabled=!hasUniversity;$('#write').title=hasUniversity?'':'Choose a university first';
  if(!hasUniversity)return;
- $('#selected-university').textContent='Browsing '+universities.find(u=>u.id===selectedUniversity).name;
+
 
  reviewIndex=new Map();for(const r of allReviews()){if(!reviewIndex.has(r.unit))reviewIndex.set(r.unit,[]);reviewIndex.get(r.unit).push(r)}
  const university=universities.find(u=>u.id===selectedUniversity)||universities[0];
@@ -33,8 +33,8 @@ function render(){
  $('#handbook-link').href=university.handbook;
  const faculties=['All faculties',...new Set(catalogue.filter(u=>u.university===selectedUniversity).map(u=>u.faculty))];
  $('#faculties').innerHTML=faculties.map(f=>`<button class="chip ${faculty===f?'active':''}" data-faculty="${esc(f)}" aria-pressed="${faculty===f}">${esc(shortFaculty(f))}</button>`).join('');
- const settings={explore:['YOUR NEXT SEMESTER STARTS HERE','Explore the possibilities'],leaderboard:['THE STUDENT FAVOURITES',university.short_name+'’s top 10 units'],saved:['A LITTLE PLANNING GOES A LONG WAY','Your saved units']};
- $('#section-eyebrow').textContent=settings[view][0];$('#section-title').innerHTML=esc(settings[view][1])+'<span>.</span>';
+ const settings={explore:['EXPLORE UNITS AT',university.name],leaderboard:['THE STUDENT FAVOURITES',university.short_name+'’s top 10 units'],saved:['A LITTLE PLANNING GOES A LONG WAY','Your saved units']};
+ $('#section-eyebrow').textContent=settings[view][0];$('#section-title').innerHTML=(university.logo?`<img class="university-logo" src="${esc(university.logo)}" alt="">`:'')+'<span>'+esc(settings[view][1])+'<span class="university-title-dot">.</span></span>';
  document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.view===view));
  $('#total-count').textContent=`${scoped.length.toLocaleString()} imported units · 2026`;
  let list=scoped.map(u=>({...u,...stats(u)}));

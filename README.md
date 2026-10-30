@@ -99,3 +99,17 @@ Run ranking checks with `node --test tests/rankings.cjs`.
 
 ### Leaderboard demo
 Open `top10.html?demo=1` or enable **Test with fictional reviews**. The deterministic fixture creates 396 labelled fictional reviews across 48 units (12 per current university), including small samples, large samples and ties. Demo mode uses only fixtures, never writes them to storage or the server, and links to matching demo reviews in unit details. Disable the toggle to restore real rankings.
+
+## Registering another university
+
+University metadata is registered through `UniversityRegistry.register_university()` in `tools/universities.py`. The API and static exporter read the same registry. Add the university's details there, including a stable lowercase ID, name, short name, HTTPS handbook URL, locations, aliases and optional local logo.
+
+For automatic imports, implement `discover(year) -> list[URL]` and `parse(page, url) -> unit`, then register an `ImportAdapter` in `tools/bulk_import.py`. No new CLI branch or frontend logic is needed. Set `coverage_note` for incomplete discovery and `supported_years` when a source cannot select a year. RMIT currently supports 2026 and only the first public listing page. Melbourne retains its existing catalogue but does not yet have an automated adapter.
+
+```sh
+python3 tools/bulk_import.py --list
+python3 tools/bulk_import.py --university monash --year 2026
+python3 tools/build_catalogue.py
+```
+
+Every new parsed unit must include `id` (university-prefixed), `university`, `code`, `name`, `faculty`, `year`, and an HTTPS `source`. Shared validation rejects invalid records and records failures in import status. Missing `description` and `credits` default to empty strings. Source-specific fields are preserved. Empty discovery cannot overwrite an existing catalogue, and resuming against a different year is rejected. Existing cached records are still skipped on resume; this refactor does not add automatic freshness checks or full historical versioning.
