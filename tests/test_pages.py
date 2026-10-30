@@ -1,5 +1,6 @@
 import json
 import unittest
+from urllib.parse import urlsplit
 from html.parser import HTMLParser
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
@@ -13,8 +14,15 @@ class PagesTests(unittest.TestCase):
   parser=Links();parser.feed((ROOT/'index.html').read_text())
   for link in parser.links:
    self.assertFalse(link.startswith('/'),link)
-   if link.startswith('./') and link!='./':self.assertTrue((ROOT/link[2:]).is_file(),link)
+   if link.startswith('./') and link!='./':self.assertTrue((ROOT/urlsplit(link).path[2:]).is_file(),link)
   self.assertTrue((ROOT/'.nojekyll').exists())
+ def test_footer_pages_have_valid_local_links(self):
+  for path in ROOT.glob('*.html'):
+   source=path.read_text();parser=Links();parser.feed(source)
+   self.assertIn('class="site-footer"',source)
+   self.assertLess(source.index('</main>'),source.index('<footer'))
+   for link in parser.links:
+    if link.startswith('./') and link!='./':self.assertTrue((ROOT/urlsplit(link).path[2:]).is_file(),link)
  def test_static_export_contains_catalogue_not_reviews(self):
   payload=json.loads((ROOT/'data/catalog.json').read_text())
   self.assertEqual(set(payload),{'universities','units','coverage'})
