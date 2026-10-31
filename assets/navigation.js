@@ -12,7 +12,7 @@
   if(previous&&previous.path===location.pathname&&Date.now()-previous.time<10000&&!reduced.matches){const source=nav.querySelector(`[data-nav-key="${previous.from}"]`);if(source){paint(position(source));indicator.getBoundingClientRect();requestAnimationFrame(()=>{indicator.classList.add('animate');paint(target)});return}}
   paint(target);requestAnimationFrame(()=>indicator.classList.add('animate'));
  }
- nav.querySelectorAll('.nav').forEach(el=>{const text=el.textContent.trim();el.dataset.navKey=text.startsWith('Top 10')?'top10':text.startsWith('Saved')?'saved':'explore'});
+ nav.querySelectorAll('.nav').forEach(el=>{const text=el.textContent.trim();el.dataset.navKey=text.startsWith('Top 10')?'top10':text.startsWith('Saved')?'saved':text.startsWith('Community')?'community':'explore'});
  nav.addEventListener('click',e=>{const link=e.target.closest('a.nav');if(!link||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;const url=new URL(link.href);if(url.origin!==location.origin)return;
   try{sessionStorage.setItem(key,JSON.stringify({from:active()?.dataset.navKey||link.dataset.navKey,path:url.pathname,time:Date.now()}))}catch{}
  });

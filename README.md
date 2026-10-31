@@ -43,7 +43,7 @@ python3 tools/server.py
 
 Open http://localhost:8000. Run only one server on that port at a time. The optional server supplies runtime configuration that connects the frontend to its API; static hosting uses `assets/runtime-config.js` with no API configured.
 
-Each new review requires an enjoyment score, display name, year taken, semester/teaching period, and text. Bookmarks stay in the browser. Demo reviews are off by default and never stored as real reviews. Existing SQLite reviews remain in the ignored `data/reviews.sqlite3` file and are available through the optional server.
+Each new shared review requires a signed-in account, enjoyment score, year taken, semester/teaching period, and text. Static previews use a browser-local display name. Bookmarks stay in the browser. Demo reviews are off by default and never stored as real reviews. Existing SQLite reviews remain in the ignored `data/reviews.sqlite3` file and are available through the optional server.
 
 ## Catalogue coverage — 2026
 
@@ -113,3 +113,38 @@ python3 tools/build_catalogue.py
 ```
 
 Every new parsed unit must include `id` (university-prefixed), `university`, `code`, `name`, `faculty`, `year`, and an HTTPS `source`. Shared validation rejects invalid records and records failures in import status. Missing `description` and `credits` default to empty strings. Source-specific fields are preserved. Empty discovery cannot overwrite an existing catalogue, and resuming against a different year is rejected. Existing cached records are still skipped on resume; this refactor does not add automatic freshness checks or full historical versioning.
+
+
+## Student community prototype
+
+Run `python3 tools/server.py`, then open `http://localhost:8000/community.html`.
+Create an account at `/account.html`. Profiles at `/profile.html?username=NAME` show
+university, enrolment year, **Year X Semester X**, bio, reviews, recommendations,
+and follower/following counts. Community offers Everyone and Following feeds,
+username search and paginated posts. Profiles and follow connections are public.
+New shared reviews require sign-in and allow one review per account/unit/offering.
+Old reviews remain intact and unclaimed. Saved units remain browser-local.
+
+The same SQLite file (`data/reviews.sqlite3`, or `UNIT_DB`) now contains users,
+sessions, follows and recommendations. Back it up before deployment. It is not
+part of the static export or Git. Migration adds tables and an optional review
+owner without deleting old reviews. For an isolated preview use:
+
+```sh
+UNIT_DB=/tmp/lunchtable-preview.sqlite3 PORT=8003 python3 tools/server.py
+```
+
+Authentication uses scrypt (N=131072, r=8, p=1), random seven-day sessions stored
+as hashes, HttpOnly/SameSite=Strict cookies, CSRF tokens on authenticated writes,
+origin checks and a per-IP authentication attempt limit. Set `COOKIE_SECURE=1`
+behind HTTPS. No credentials are stored in localStorage. This standard-library
+HTTP server binds to localhost and is a development server, not a production
+hosting setup. Use same-origin HTTPS hosting with durable storage, backups and
+production request limits before public launch. GitHub Pages cannot run accounts.
+Password recovery, email/student verification, self-service account/review deletion
+and moderation tools are not implemented. Hosting/operator details in the privacy
+notice must be finalised for launch. No email address is collected at sign-up.
+
+Run `python3 -m unittest discover -s tests` (the social integration test binds a
+local ephemeral port). It checks signup/login/logout, CSRF/origin rejection,
+account ownership, follow counts, feed filtering, recommendations and legacy rows.
